@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Klinikler için randevuya gelmeme (no-show) riski yüksek hastaları tespit eden ve yapay zeka destekli hatırlatma mesajları üreten akıllı asistan.">
+    <title>Hasta No-Show Risk ve Geri Kazanım Asistanı</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-house-medical-circle-exclamation"></i>
+                </div>
+                <div>
+                    <h1>ClinicKeeper</h1>
+                    <p class="subtitle">Hasta No-Show Risk ve Geri Kazanım Asistanı</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="settings-btn" class="btn btn-secondary" title="Gemini API Ayarları">
+                    <i class="fa-solid fa-key"></i> <span>Gemini API Ayarı</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- İstatistikler -->
+        <section class="stats-grid" aria-label="Klinik Özet İstatistikleri">
+            <div class="stat-card" id="stat-total-patients">
+                <div class="stat-icon bg-teal-light text-teal">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Toplam Hasta</h3>
+                    <p class="stat-value" id="val-total-patients">0</p>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-high-risk">
+                <div class="stat-icon bg-red-light text-red">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Yüksek Riskli Hasta</h3>
+                    <p class="stat-value text-red" id="val-high-risk">0</p>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-avg-risk">
+                <div class="stat-icon bg-amber-light text-amber">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Ortalama Risk Skoru</h3>
+                    <p class="stat-value" id="val-avg-risk">0%</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filtreler ve Arama -->
+        <section class="control-panel" aria-label="Filtreleme ve Kontroller">
+            <div class="search-bar-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-input" placeholder="Hasta adı ile ara..." aria-label="Hasta adı ile ara">
+            </div>
+            <div class="filter-group">
+                <div class="filter-item">
+                    <label for="filter-risk"><i class="fa-solid fa-shield-halved"></i> Risk Seviyesi</label>
+                    <select id="filter-risk" aria-label="Risk seviyesine göre filtrele">
+                        <option value="all">Tümü</option>
+                        <option value="high">Yüksek Risk (>70)</option>
+                        <option value="medium">Orta Risk (40-70)</option>
+                        <option value="low">Düşük Risk (<40)</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="filter-clinic"><i class="fa-solid fa-hospital"></i> Klinik Tipi</label>
+                    <select id="filter-clinic" aria-label="Klinik tipine göre filtrele">
+                        <option value="all">Tüm Klinikler</option>
+                        <option value="Dental">Dental (Diş)</option>
+                        <option value="GP">GP (Pratisyen Hekim)</option>
+                        <option value="Dermatology">Dermatology (Cildiye)</option>
+                        <option value="Physiotherapy">Physiotherapy (Fizik Tedavi)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hasta Kartları Listesi -->
+        <section class="list-section">
+            <div class="section-header">
+                <h2>Randevu Listesi <span class="badge" id="list-count">0</span></h2>
+                <div class="sort-indicator">
+                    <i class="fa-solid fa-arrow-down-wide-short"></i> Risk Skoruna Göre Sıralı (Yüksek → Düşük)
+                </div>
+            </div>
+            
+            <div id="patient-list" class="patient-grid">
+                <!-- Kartlar JS ile buraya yüklenecek -->
+                <div class="loading-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Hastalar yükleniyor...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Gemini API Ayarları Modalı -->
+    <div id="settings-modal" class="modal" aria-hidden="true">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-gears"></i> Gemini API Ayarları</h2>
+                <button class="close-btn" id="close-settings-btn" aria-label="Kapat">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Uygulamada gerçek yapay zeka mesaj üretimi kullanmak için Gemini API anahtarınızı girebilirsiniz. API anahtarınız sadece tarayıcınızın yerel depolama alanında (localStorage) saklanır, hiçbir sunucuya gönderilmez.</p>
+                <div class="form-group">
+                    <label for="api-key-input">Gemini API Key</label>
+                    <div class="input-with-action">
+                        <input type="password" id="api-key-input" placeholder="AIzaSy..." autocomplete="off">
+                        <button type="button" id="toggle-key-visibility" class="btn btn-icon" title="Göster/Gizle">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <span class="help-text">API anahtarınız yoksa, Google AI Studio üzerinden ücretsiz alabilirsiniz. Anahtar girilmezse sistem yerel akıllı mesaj şablonlarını kullanır.</span>
+                </div>
+                <div class="status-indicator" id="api-status">
+                    <!-- Durum bilgisi buraya gelecek -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings-btn" class="btn btn-primary">Kaydet ve Kapat</button>
+                <button id="clear-settings-btn" class="btn btn-secondary text-red">Anahtarı Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hatırlatma Mesajı Taslağı Modalı -->
+    <div id="reminder-modal" class="modal" aria-hidden="true">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-paper-plane text-teal"></i> Hatırlatma Mesajı Taslağı</h2>
+                <button class="close-btn" id="close-reminder-btn" aria-label="Kapat">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="patient-summary-bubble">
+                    <div>
+                        <strong id="modal-patient-name">Yükleniyor...</strong>
+                        <span id="modal-patient-details">...</span>
+                    </div>
+                    <div class="modal-badge-wrapper">
+                        <span class="badge" id="modal-patient-risk-badge">...</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reminder-text-area">Mesaj İçeriği (Düzenlenebilir)</label>
+                    <textarea id="reminder-text-area" rows="10" placeholder="Mesaj yükleniyor..."></textarea>
+                </div>
+
+                <div id="ai-generation-status" class="ai-status-box">
+                    <i class="fa-solid fa-wand-magic-sparkles fa-spin"></i> Mesaj oluşturuluyor...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="copy-message-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-copy"></i> Panoya Kopyala
+                </button>
+                <a id="whatsapp-send-btn" href="#" target="_blank" class="btn btn-primary bg-whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp ile Gönder
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer-bar">
+        <p>&copy; 2026 ClinicKeeper Klinik Yönetim Sistemleri. Tüm hakları saklıdır.</p>
+    </footer>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
