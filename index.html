@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ClinicKeeper — Randevu No-Show Risk Paneli</title>
+  <title>ClinicKeeper — Polident Randevu Zekâsı</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -16,7 +16,7 @@
       <div class="trust-stats">
         <span class="stat"><b>0.85</b> ROC-AUC</span>
         <span class="stat-sep"></span>
-        <span class="stat"><b>%53</b> yakalama (recall)</span>
+        <span class="stat"><b>%53</b> yakalama</span>
         <span class="stat-sep"></span>
         <span class="stat"><b>17.172</b> gerçek randevu</span>
         <span class="stat-sep"></span>
@@ -27,30 +27,62 @@
 
   <header class="hero">
     <div class="hero-inner">
-      <p class="eyebrow">Polident Ağız ve Diş Sağlığı Kliniği · Randevu Zekâsı</p>
+      <p class="eyebrow">Polident Ağız ve Diş Sağlığı · Randevu Zekâsı</p>
       <h1>Gelmeyecek hastayı<br /><em>randevudan önce</em> gör.</h1>
       <p class="lede">
-        Kliniğin günlük randevu listesini no-show riskine göre sıralar,
-        riskli hastaları öne çıkarır ve yapay zekâ ile nazik bir hatırlatma
-        mesajı üretir.
+        Kliniğin randevularını no-show riskine göre sıralar, riskli hastaları
+        hafta başında öne çıkarır ve yapay zekâ ile nazik bir hatırlatma üretir.
       </p>
     </div>
   </header>
 
   <div class="tabs-wrap">
     <div class="tabs" role="tablist">
-      <button class="tab active" id="tab-list-btn" role="tab" data-tab="list">Randevu Listesi</button>
-      <button class="tab" id="tab-single-btn" role="tab" data-tab="single">Tek Hasta Analizi</button>
+      <button class="tab active" role="tab" data-tab="list">Randevu Listesi</button>
+      <button class="tab" role="tab" data-tab="single">Tek Hasta Analizi</button>
     </div>
   </div>
 
   <main class="main-area">
 
+    <!-- ===== SEKME 1: RANDEVU LİSTESİ ===== -->
     <section class="tab-panel active" id="panel-list" role="tabpanel">
+
+      <!-- Kontrol şeridi -->
+      <div class="controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Görünüm</span>
+          <div class="seg role-seg">
+            <button class="seg-btn active" data-role="yonetici">Yönetici</button>
+            <button class="seg-btn" data-role="personel">Personel</button>
+          </div>
+        </div>
+
+        <div class="ctrl-group" id="branch-wrap">
+          <span class="ctrl-label">Şube</span>
+          <select id="branch-select" class="branch-select">
+            <option value="all">Tüm şubeler</option>
+            <option value="Kadıköy">Polident Kadıköy</option>
+            <option value="Ataşehir">Polident Ataşehir</option>
+            <option value="Bakırköy">Polident Bakırköy</option>
+          </select>
+        </div>
+        <div class="ctrl-group" id="staff-branch-label-wrap">
+          <span class="staff-branch" id="staff-branch-label" hidden></span>
+        </div>
+
+        <div class="ctrl-group ctrl-right">
+          <div class="seg when-seg">
+            <button class="seg-btn active" data-when="hafta">Bu hafta</button>
+            <button class="seg-btn" data-when="yarin">Yarın</button>
+          </div>
+        </div>
+      </div>
+
       <div class="list-head">
         <div>
-          <h2>Bugünün randevuları</h2>
-          <p class="list-sub">Riske göre sıralı · en riskli hastalar üstte</p>
+          <h2>Randevular</h2>
+          <p class="list-sub">Riske göre sıralı · en riskli hastalar üstte · ⚠ geçmiş iptal/erteleme</p>
         </div>
         <div class="list-legend">
           <span class="lg lg-high"><i></i> Yüksek</span>
@@ -68,6 +100,7 @@
       </div>
     </section>
 
+    <!-- ===== SEKME 2: TEK HASTA ANALİZİ ===== -->
     <section class="tab-panel" id="panel-single" role="tabpanel">
       <div class="grid">
         <div class="panel form-panel">
@@ -95,7 +128,7 @@
               </div>
               <div class="field-row">
                 <label class="field">
-                  <span>Klinik</span>
+                  <span>Şube</span>
                   <select id="clinic"></select>
                 </label>
                 <label class="field">
@@ -118,11 +151,11 @@
                 </label>
                 <label class="field">
                   <span>Saat</span>
-                  <input type="number" id="hour_of_day" min="0" max="23" value="9" />
+                  <select id="hour_select"></select>
                 </label>
                 <label class="field">
                   <span>Ay</span>
-                  <input type="number" id="month" min="1" max="12" value="6" />
+                  <select id="month"></select>
                 </label>
               </div>
             </fieldset>
@@ -141,16 +174,6 @@
                 <label class="field checkbox-field">
                   <input type="checkbox" id="is_repeat" checked />
                   <span>Tekrar eden hasta</span>
-                </label>
-              </div>
-              <div class="field-row">
-                <label class="field">
-                  <span>Irk (veri seti kategorisi)</span>
-                  <select id="race"></select>
-                </label>
-                <label class="field">
-                  <span>Etnik köken</span>
-                  <select id="ethnicity"></select>
                 </label>
               </div>
             </fieldset>
@@ -228,9 +251,8 @@
 
   <footer class="foot">
     <p>
-      Model: Gradient Boosting · CHLA (Children's Hospital Los Angeles) veri seti ·
-      Eşik 0.15 · Pilot klinik: Polident Ağız ve Diş Sağlığı. Klinik karar aracı
-      değildir; hatırlatma önceliklendirme amaçlıdır.
+      Model: Gradient Boosting · CHLA veri seti · Eşik 0.15 · Pilot: Polident Ağız ve Diş Sağlığı.
+      Klinik karar aracı değildir; hatırlatma önceliklendirme amaçlıdır.
     </p>
   </footer>
 
