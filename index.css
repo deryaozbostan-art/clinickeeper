@@ -351,3 +351,100 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ==================== SEKMELER ==================== */
+.tabs-wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.tabs {
+  display: inline-flex; gap: 4px;
+  background: #fff; border: 1px solid var(--line);
+  border-radius: 999px; padding: 4px;
+  box-shadow: var(--shadow-soft);
+}
+.tab {
+  border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  padding: 9px 20px; border-radius: 999px; color: var(--ink-soft);
+  transition: background .15s ease, color .15s ease;
+}
+.tab.active { background: var(--teal); color: #fff; }
+.tab:not(.active):hover { color: var(--teal-deep); }
+
+.main-area { max-width: 1080px; margin: 0 auto; padding: 20px 24px 48px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fade .3s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ==================== RANDEVU LİSTESİ ==================== */
+.list-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; margin-bottom: 18px; flex-wrap: wrap;
+}
+.list-head h2 {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 22px; font-weight: 600; margin: 0 0 2px; letter-spacing: -.01em;
+}
+.list-sub { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.list-legend { display: flex; gap: 14px; font-size: 12.5px; color: var(--ink-soft); }
+.lg { display: inline-flex; align-items: center; gap: 6px; }
+.lg i { width: 9px; height: 9px; border-radius: 50%; }
+.lg-high i { background: var(--coral); }
+.lg-mid i { background: var(--amber); }
+.lg-low i { background: var(--green); }
+
+.appt-table {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow);
+}
+.appt-loading {
+  padding: 60px 24px; text-align: center; color: var(--ink-soft);
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.appt-loading .spin {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid var(--line); border-top-color: var(--teal);
+  animation: spin .8s linear infinite;
+}
+.appt-loading p { margin: 0; font-size: 14px; }
+.appt-error { padding: 40px 24px; text-align: center; color: var(--coral); font-size: 14px; }
+
+.appt-row {
+  display: grid;
+  grid-template-columns: 92px 1.4fr 1.3fr 70px 130px;
+  align-items: center; gap: 12px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--line);
+  transition: background .12s ease;
+}
+.appt-row:last-child { border-bottom: none; }
+.appt-row:not(.appt-header):hover { background: #F5FAF8; }
+.appt-header {
+  background: #F2F8F6;
+  font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-soft); font-weight: 600;
+}
+.c-name b { display: block; font-weight: 600; font-size: 14.5px; }
+.c-name small { color: #93A9A4; font-size: 12px; }
+.c-islem { font-size: 13.5px; color: var(--ink-soft); }
+.c-saat { font-size: 13.5px; font-weight: 500; }
+
+.risk-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 58px; padding: 5px 10px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; font-family: "Bricolage Grotesque", sans-serif;
+  color: var(--bc); background: color-mix(in srgb, var(--bc) 12%, #fff);
+  border: 1px solid color-mix(in srgb, var(--bc) 30%, #fff);
+}
+.risk-badge.na { color: var(--ink-soft); background: #F0F4F3; border-color: var(--line); }
+
+.row-btn {
+  border: 1px solid var(--line); background: #fff;
+  font-family: inherit; font-size: 12.5px; font-weight: 600;
+  padding: 7px 12px; border-radius: var(--r-sm); cursor: pointer; color: var(--teal-deep);
+  transition: background .15s ease, border-color .15s ease;
+}
+.row-btn:hover { background: #F0FAF8; border-color: var(--teal); }
+
+@media (max-width: 720px) {
+  .appt-row { grid-template-columns: 70px 1.3fr 64px; }
+  .c-islem, .c-action { display: none; }
+}
