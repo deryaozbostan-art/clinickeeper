@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ClinicKeeper — Randevu No-Show Risk Asistanı</title>
+  <title>ClinicKeeper — Randevu No-Show Risk Paneli</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="index.css" />
 </head>
 <body>
-  <!-- Güven bandı: model performansı -->
   <div class="trust-band">
     <div class="trust-inner">
       <span class="trust-brand">ClinicKeeper</span>
@@ -28,178 +27,210 @@
 
   <header class="hero">
     <div class="hero-inner">
-      <p class="eyebrow">Klinik Randevu Zekâsı</p>
+      <p class="eyebrow">Polident Ağız ve Diş Sağlığı Kliniği · Randevu Zekâsı</p>
       <h1>Gelmeyecek hastayı<br /><em>randevudan önce</em> gör.</h1>
       <p class="lede">
-        Hasta bilgilerini gir; makine öğrenmesi modeli randevuya gelmeme
-        (no-show) riskini hesaplasın, ardından yapay zekâ riskli hastaya
-        nazik bir hatırlatma mesajı yazsın.
+        Kliniğin günlük randevu listesini no-show riskine göre sıralar,
+        riskli hastaları öne çıkarır ve yapay zekâ ile nazik bir hatırlatma
+        mesajı üretir.
       </p>
     </div>
   </header>
 
-  <main class="grid">
-    <!-- SOL: Hasta / randevu formu -->
-    <section class="panel form-panel" aria-labelledby="form-title">
-      <div class="panel-head">
-        <h2 id="form-title">Hasta &amp; randevu bilgileri</h2>
-        <div class="examples">
-          <span class="examples-label">Hızlı örnek:</span>
-          <button type="button" class="chip chip-high" data-example="high">Yüksek riskli</button>
-          <button type="button" class="chip chip-low" data-example="low">Düşük riskli</button>
+  <div class="tabs-wrap">
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tab-list-btn" role="tab" data-tab="list">Randevu Listesi</button>
+      <button class="tab" id="tab-single-btn" role="tab" data-tab="single">Tek Hasta Analizi</button>
+    </div>
+  </div>
+
+  <main class="main-area">
+
+    <section class="tab-panel active" id="panel-list" role="tabpanel">
+      <div class="list-head">
+        <div>
+          <h2>Bugünün randevuları</h2>
+          <p class="list-sub">Riske göre sıralı · en riskli hastalar üstte</p>
+        </div>
+        <div class="list-legend">
+          <span class="lg lg-high"><i></i> Yüksek</span>
+          <span class="lg lg-mid"><i></i> Orta</span>
+          <span class="lg lg-low"><i></i> Düşük</span>
         </div>
       </div>
 
-      <form id="patient-form" novalidate>
-        <fieldset>
-          <legend>Randevu</legend>
-          <div class="field-row">
-            <label class="field">
-              <span>Hasta adı</span>
-              <input type="text" id="patient_name" placeholder="ör. Ayşe Yılmaz" />
-            </label>
-            <label class="field">
-              <span>Randevuya kalan gün <small>(lead time)</small></span>
-              <input type="number" id="lead_time" min="0" value="30" />
-            </label>
-          </div>
-          <div class="field-row">
-            <label class="field">
-              <span>Klinik</span>
-              <select id="clinic"></select>
-            </label>
-            <label class="field">
-              <span>Randevu tipi</span>
-              <select id="appt_type"></select>
-            </label>
-          </div>
-          <div class="field-row">
-            <label class="field">
-              <span>Gün</span>
-              <select id="day_of_week">
-                <option value="0">Pazartesi</option>
-                <option value="1">Salı</option>
-                <option value="2">Çarşamba</option>
-                <option value="3">Perşembe</option>
-                <option value="4">Cuma</option>
-                <option value="5">Cumartesi</option>
-                <option value="6">Pazar</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>Saat</span>
-              <input type="number" id="hour_of_day" min="0" max="23" value="9" />
-            </label>
-            <label class="field">
-              <span>Ay</span>
-              <input type="number" id="month" min="1" max="12" value="6" />
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Hasta</legend>
-          <div class="field-row">
-            <label class="field">
-              <span>Yaş</span>
-              <input type="number" id="age" min="0" max="120" value="12" />
-            </label>
-            <label class="field">
-              <span>Kaçıncı randevusu</span>
-              <input type="number" id="appt_num" min="1" value="2" />
-            </label>
-            <label class="field checkbox-field">
-              <input type="checkbox" id="is_repeat" checked />
-              <span>Tekrar eden hasta</span>
-            </label>
-          </div>
-          <div class="field-row">
-            <label class="field">
-              <span>Irk (veri seti kategorisi)</span>
-              <select id="race"></select>
-            </label>
-            <label class="field">
-              <span>Etnik köken</span>
-              <select id="ethnicity"></select>
-            </label>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Geçmiş randevu davranışı</legend>
-          <div class="field-row">
-            <label class="field">
-              <span>Gelinen randevu</span>
-              <input type="number" id="total_success_appointments" min="0" value="0" />
-            </label>
-            <label class="field">
-              <span>İptal</span>
-              <input type="number" id="total_cancellations" min="0" value="0" />
-            </label>
-            <label class="field">
-              <span>Ertelenen</span>
-              <input type="number" id="total_rescheduled" min="0" value="0" />
-            </label>
-          </div>
-          <input type="hidden" id="week_of_month" value="2" />
-        </fieldset>
-
-        <button type="submit" class="btn-primary" id="predict-btn">
-          <span class="btn-label">Riski hesapla</span>
-          <span class="btn-spinner" hidden></span>
-        </button>
-      </form>
+      <div class="appt-table" id="appt-table">
+        <div class="appt-loading" id="appt-loading">
+          <span class="spin"></span>
+          <p>Randevular model tarafından değerlendiriliyor…<br />
+          <small>(İlk yükleme API'yi uyandırabilir, ~50 sn sürebilir.)</small></p>
+        </div>
+      </div>
     </section>
 
-    <!-- SAĞ: Sonuç + gauge + AI mesaj -->
-    <section class="panel result-panel" aria-live="polite">
-      <div id="result-empty" class="result-empty">
-        <div class="gauge-ghost"></div>
-        <p>Soldaki formu doldur ve <b>Riski hesapla</b>'ya bas.<br />Sonuç burada görünecek.</p>
-      </div>
-
-      <div id="result-content" hidden>
-        <!-- Gauge (imza öğesi) -->
-        <div class="gauge-wrap">
-          <svg class="gauge" viewBox="0 0 200 120" role="img" aria-label="Risk göstergesi">
-            <path class="gauge-track" d="M20 110 A80 80 0 0 1 180 110" />
-            <path class="gauge-fill" id="gauge-fill" d="M20 110 A80 80 0 0 1 180 110" />
-          </svg>
-          <div class="gauge-center">
-            <span class="gauge-percent" id="gauge-percent">—</span>
-            <span class="gauge-band" id="gauge-band">risk</span>
-          </div>
-        </div>
-
-        <div class="verdict" id="verdict"></div>
-
-        <!-- AI mesaj bölümü -->
-        <div class="ai-block">
-          <div class="ai-head">
-            <h3>Yapay zekâ hatırlatma mesajı</h3>
-            <div class="tone-picker" id="tone-picker">
-              <button type="button" class="tone active" data-tone="samimi">Samimi</button>
-              <button type="button" class="tone" data-tone="resmi">Resmi</button>
-              <button type="button" class="tone" data-tone="kısa">Kısa</button>
+    <section class="tab-panel" id="panel-single" role="tabpanel">
+      <div class="grid">
+        <div class="panel form-panel">
+          <div class="panel-head">
+            <h2>Hasta &amp; randevu bilgileri</h2>
+            <div class="examples">
+              <span class="examples-label">Hızlı örnek:</span>
+              <button type="button" class="chip chip-high" data-example="high">Yüksek riskli</button>
+              <button type="button" class="chip chip-low" data-example="low">Düşük riskli</button>
             </div>
           </div>
-          <button type="button" class="btn-secondary" id="msg-btn">
-            <span class="btn-label">Mesaj oluştur</span>
-            <span class="btn-spinner" hidden></span>
-          </button>
-          <div class="ai-message" id="ai-message" hidden>
-            <p id="ai-message-text"></p>
-            <button type="button" class="copy-btn" id="copy-btn">Kopyala</button>
+
+          <form id="patient-form" novalidate>
+            <fieldset>
+              <legend>Randevu</legend>
+              <div class="field-row">
+                <label class="field">
+                  <span>Hasta adı</span>
+                  <input type="text" id="patient_name" placeholder="ör. Ayşe Yılmaz" />
+                </label>
+                <label class="field">
+                  <span>Randevuya kalan gün <small>(lead time)</small></span>
+                  <input type="number" id="lead_time" min="0" value="30" />
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="field">
+                  <span>Klinik</span>
+                  <select id="clinic"></select>
+                </label>
+                <label class="field">
+                  <span>Randevu tipi</span>
+                  <select id="appt_type"></select>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="field">
+                  <span>Gün</span>
+                  <select id="day_of_week">
+                    <option value="0">Pazartesi</option>
+                    <option value="1">Salı</option>
+                    <option value="2">Çarşamba</option>
+                    <option value="3">Perşembe</option>
+                    <option value="4">Cuma</option>
+                    <option value="5">Cumartesi</option>
+                    <option value="6">Pazar</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Saat</span>
+                  <input type="number" id="hour_of_day" min="0" max="23" value="9" />
+                </label>
+                <label class="field">
+                  <span>Ay</span>
+                  <input type="number" id="month" min="1" max="12" value="6" />
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Hasta</legend>
+              <div class="field-row">
+                <label class="field">
+                  <span>Yaş</span>
+                  <input type="number" id="age" min="0" max="120" value="35" />
+                </label>
+                <label class="field">
+                  <span>Kaçıncı randevusu</span>
+                  <input type="number" id="appt_num" min="1" value="2" />
+                </label>
+                <label class="field checkbox-field">
+                  <input type="checkbox" id="is_repeat" checked />
+                  <span>Tekrar eden hasta</span>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="field">
+                  <span>Irk (veri seti kategorisi)</span>
+                  <select id="race"></select>
+                </label>
+                <label class="field">
+                  <span>Etnik köken</span>
+                  <select id="ethnicity"></select>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Geçmiş randevu davranışı</legend>
+              <div class="field-row">
+                <label class="field">
+                  <span>Gelinen randevu</span>
+                  <input type="number" id="total_success_appointments" min="0" value="0" />
+                </label>
+                <label class="field">
+                  <span>İptal</span>
+                  <input type="number" id="total_cancellations" min="0" value="0" />
+                </label>
+                <label class="field">
+                  <span>Ertelenen</span>
+                  <input type="number" id="total_rescheduled" min="0" value="0" />
+                </label>
+              </div>
+              <input type="hidden" id="week_of_month" value="2" />
+            </fieldset>
+
+            <button type="submit" class="btn-primary" id="predict-btn">
+              <span class="btn-label">Riski hesapla</span>
+              <span class="btn-spinner" hidden></span>
+            </button>
+          </form>
+        </div>
+
+        <div class="panel result-panel" aria-live="polite">
+          <div id="result-empty" class="result-empty">
+            <div class="gauge-ghost"></div>
+            <p>Soldaki formu doldur ve <b>Riski hesapla</b>'ya bas.<br />Sonuç burada görünecek.</p>
+          </div>
+
+          <div id="result-content" hidden>
+            <div class="gauge-wrap">
+              <svg class="gauge" viewBox="0 0 200 120" role="img" aria-label="Risk göstergesi">
+                <path class="gauge-track" d="M20 110 A80 80 0 0 1 180 110" />
+                <path class="gauge-fill" id="gauge-fill" d="M20 110 A80 80 0 0 1 180 110" />
+              </svg>
+              <div class="gauge-center">
+                <span class="gauge-percent" id="gauge-percent">—</span>
+                <span class="gauge-band" id="gauge-band">risk</span>
+              </div>
+            </div>
+
+            <div class="verdict" id="verdict"></div>
+
+            <div class="ai-block">
+              <div class="ai-head">
+                <h3>Yapay zekâ hatırlatma mesajı</h3>
+                <div class="tone-picker" id="tone-picker">
+                  <button type="button" class="tone active" data-tone="samimi">Samimi</button>
+                  <button type="button" class="tone" data-tone="resmi">Resmi</button>
+                  <button type="button" class="tone" data-tone="kısa">Kısa</button>
+                </div>
+              </div>
+              <button type="button" class="btn-secondary" id="msg-btn">
+                <span class="btn-label">Mesaj oluştur</span>
+                <span class="btn-spinner" hidden></span>
+              </button>
+              <div class="ai-message" id="ai-message" hidden>
+                <p id="ai-message-text"></p>
+                <button type="button" class="copy-btn" id="copy-btn">Kopyala</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
+
   </main>
 
   <footer class="foot">
     <p>
       Model: Gradient Boosting · CHLA (Children's Hospital Los Angeles) veri seti ·
-      Eşik 0.15 · Eğitim ortamı. Klinik karar aracı değildir; hatırlatma önceliklendirme amaçlıdır.
+      Eşik 0.15 · Pilot klinik: Polident Ağız ve Diş Sağlığı. Klinik karar aracı
+      değildir; hatırlatma önceliklendirme amaçlıdır.
     </p>
   </footer>
 
