@@ -409,11 +409,15 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 
 .appt-row {
   display: grid;
-  grid-template-columns: 92px 1.4fr 1.3fr 70px 130px;
+  grid-template-columns: 88px 1.5fr 1.2fr 100px 62px 120px;
   align-items: center; gap: 12px;
   padding: 13px 20px;
   border-bottom: 1px solid var(--line);
   transition: background .12s ease;
+}
+.appt-table.compact .appt-row,
+.appt-row.no-sube {
+  grid-template-columns: 88px 1.6fr 1.3fr 62px 120px;
 }
 .appt-row:last-child { border-bottom: none; }
 .appt-row:not(.appt-header):hover { background: #F5FAF8; }
@@ -447,4 +451,53 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 @media (max-width: 720px) {
   .appt-row { grid-template-columns: 70px 1.3fr 64px; }
   .c-islem, .c-action { display: none; }
+}
+
+/* ==================== KONTROL ŞERİDİ ==================== */
+.controls {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 18px;
+  box-shadow: var(--shadow-soft);
+}
+.ctrl-group { display: flex; align-items: center; gap: 10px; }
+.ctrl-right { margin-left: auto; }
+.ctrl-label {
+  font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-soft); font-weight: 600;
+}
+.seg { display: inline-flex; background: var(--mint); border-radius: 999px; padding: 3px; }
+.seg-btn {
+  border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border-radius: 999px; color: var(--ink-soft);
+  transition: background .15s ease, color .15s ease;
+}
+.seg-btn.active { background: #fff; color: var(--teal-deep); box-shadow: var(--shadow-soft); }
+.role-seg .seg-btn.active { background: var(--teal); color: #fff; }
+
+.branch-select {
+  font-family: inherit; font-size: 13.5px; color: var(--ink);
+  padding: 7px 11px; border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: #fff; cursor: pointer;
+}
+.staff-branch {
+  font-size: 14px; font-weight: 600; color: var(--teal-deep);
+  background: var(--mint); padding: 6px 14px; border-radius: 999px;
+}
+
+/* ==================== geçmiş etiketi + şube sütunu ==================== */
+.hist-tag {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  color: var(--coral); background: #FBEDEA;
+  border: 1px solid #EBC4BA; border-radius: 999px;
+  padding: 2px 8px; margin-left: 6px; vertical-align: middle;
+}
+.c-sube { font-size: 13px; color: var(--ink-soft); }
+
+@media (max-width: 760px) {
+  .controls { gap: 12px; }
+  .ctrl-right { margin-left: 0; width: 100%; }
+  .appt-row { grid-template-columns: 74px 1.4fr 60px !important; }
+  .c-islem, .c-sube, .c-action { display: none; }
 }
