@@ -31,9 +31,9 @@
 
 <!-- Özet kartları -->
 <section class="stats-row" id="stats-row">
-  <div class="stat-card sc-teal"><div class="ic">📅</div><div class="val" id="s-total">—</div><div class="lbl">Bu haftaki randevu</div></div>
-  <div class="stat-card sc-coral"><div class="ic">⚠️</div><div class="val" id="s-high">—</div><div class="lbl">Yüksek riskli hasta</div></div>
-  <div class="stat-card sc-green"><div class="ic">✓</div><div class="val" id="s-low">—</div><div class="lbl">Düşük riskli (güvenli)</div></div>
+  <div class="stat-card sc-teal clickable" data-risk="all"><div class="ic">📅</div><div class="val" id="s-total">—</div><div class="lbl">Bu haftaki randevu</div></div>
+  <div class="stat-card sc-coral clickable" data-risk="Yüksek"><div class="ic">⚠️</div><div class="val" id="s-high">—</div><div class="lbl">Yüksek riskli hasta</div></div>
+  <div class="stat-card sc-green clickable" data-risk="Düşük"><div class="ic">✓</div><div class="val" id="s-low">—</div><div class="lbl">Düşük riskli (güvenli)</div></div>
   <div class="stat-card sc-accent"><div class="ic">✨</div><div class="val">%85</div><div class="lbl">Model isabet gücü (ROC-AUC)</div></div>
 </section>
 
@@ -77,7 +77,7 @@
     <div class="list-head">
       <div>
         <h2>Randevular</h2>
-        <p class="list-sub">Riske göre sıralı · en riskli hastalar üstte · ⚠ geçmiş iptal/erteleme</p>
+        <p class="list-sub">Riske göre sıralı · en riskli hastalar üstte · ⚠ geçmiş iptal/erteleme <span id="risk-filter-chip"></span></p>
       </div>
       <div class="legend">
         <span class="lg lg-h"><i></i> Yüksek</span>

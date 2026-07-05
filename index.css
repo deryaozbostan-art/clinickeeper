@@ -45,6 +45,11 @@ a{color:inherit}
 .sc-accent .ic{background:rgba(255,255,255,.18);color:#fff}
 .sc-accent .val,.sc-accent .lbl{color:#fff}
 .sc-accent .lbl{opacity:.85}
+.stat-card.clickable{cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
+.stat-card.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--teal)}
+.stat-card.clickable.active{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal)}
+.stat-card.clickable::after{content:"↳ filtrele";position:absolute;bottom:10px;right:12px;font-size:10px;color:var(--ink-soft);opacity:0;transition:opacity .15s}
+.stat-card.clickable:hover::after{opacity:.6}
 
 /* Sekmeler */
 .tabs-wrap{max-width:1160px;margin:26px auto 0;padding:0 24px}
@@ -145,9 +150,9 @@ legend{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--
 .gauge{width:100%;height:auto;overflow:visible}
 .gauge-track{fill:none;stroke:var(--mint);stroke-width:16;stroke-linecap:round}
 .gauge-fill{fill:none;stroke:var(--teal);stroke-width:16;stroke-linecap:round;stroke-dasharray:251.3;stroke-dashoffset:251.3;transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1),stroke .4s}
-.gauge-center{position:absolute;inset:0;top:34px;display:flex;flex-direction:column;align-items:center}
-.gauge-percent{font-family:"Bricolage Grotesque",sans-serif;font-size:38px;font-weight:700;line-height:1}
-.gauge-band{font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.gauge-center{position:absolute;left:0;right:0;top:56px;display:flex;flex-direction:column;align-items:center}
+.gauge-percent{font-family:"Bricolage Grotesque",sans-serif;font-size:33px;font-weight:700;line-height:1}
+.gauge-band{font-size:12px;color:var(--ink-soft);margin-top:3px}
 .verdict{padding:14px 16px;border-radius:var(--r-md);font-size:14px;line-height:1.5;margin-bottom:18px}
 .verdict.high{background:var(--coral-bg);color:#7a2c1e;border:1px solid var(--coral-line)}
 .verdict.mid{background:var(--amber-bg);color:#7a5318;border:1px solid #ecd6ac}

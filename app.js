@@ -1,6 +1,6 @@
 const API_BASE="https://clinickeeper-api.onrender.com";
 const GAUGE_LEN=Math.PI*80;
-let lastResult=null,currentTone="samimi",currentRole="yonetici",currentBranch="all",currentWhen="hafta",scoredPatients=[];
+let lastResult=null,currentTone="samimi",currentRole="yonetici",currentBranch="all",currentWhen="hafta",currentRisk="all",scoredPatients=[];
 const STAFF_BRANCH="Kadıköy";
 const MONTHS=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 const APPT_LABELS={"New":"Yeni hasta","Follow-up":"Eski hasta","Others":"Diğer"};
@@ -62,11 +62,18 @@ function visible(){
   const br=(currentRole==="personel")?STAFF_BRANCH:currentBranch;
   if(br!=="all")r=r.filter(x=>x.sube===br);
   if(currentWhen==="yarin")r=r.filter(x=>x.when==="yarin");
+  if(currentRisk!=="all")r=r.filter(x=>x.band===currentRisk);
   r.sort((a,b)=>(b.pct??-1)-(a.pct??-1));return r;
 }
 function renderList(){
   const wrap=document.getElementById("appt-list");
   const rows=visible();const showBranch=(currentRole==="yonetici");
+  const chip=document.getElementById("risk-filter-chip");
+  if(chip){
+    if(currentRisk!=="all"){chip.innerHTML=` · <b style="color:var(--teal-deep)">${currentRisk} risk</b> <button id="clear-risk" style="border:none;background:var(--mint);color:var(--teal-deep);font:inherit;font-size:11px;padding:2px 8px;border-radius:99px;cursor:pointer;margin-left:4px">✕ temizle</button>`;
+      const cb=document.getElementById("clear-risk");if(cb)cb.addEventListener("click",()=>{currentRisk="all";document.querySelectorAll(".stat-card.clickable").forEach(x=>x.classList.remove("active"));renderList();});
+    }else chip.innerHTML="";
+  }
   if(!rows.length){wrap.innerHTML='<div class="appt-error">Bu görünümde randevu yok.</div>';return;}
   const head=`<div class="arow head ${showBranch?'':'no-sube'}"><span>Risk</span><span>Hasta</span><span class="islem">İşlem</span>${showBranch?'<span class="sube">Şube</span>':''}<span class="saat">Saat</span><span></span></div>`;
   const body=rows.map(r=>{
@@ -136,5 +143,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   const bs=document.getElementById("branch-select");if(bs)bs.addEventListener("change",()=>{currentBranch=bs.value;renderList();});
   document.querySelectorAll("[data-when]").forEach(b=>b.addEventListener("click",()=>{currentWhen=b.dataset.when;document.querySelectorAll("[data-when]").forEach(x=>x.classList.toggle("active",x.dataset.when===currentWhen));renderList();}));
   document.querySelectorAll("[data-example]").forEach(b=>b.addEventListener("click",()=>applyExample(b.dataset.example)));
+  document.querySelectorAll(".stat-card.clickable").forEach(c=>c.addEventListener("click",()=>{
+    currentRisk=c.dataset.risk;
+    document.querySelectorAll(".stat-card.clickable").forEach(x=>x.classList.toggle("active",x===c && currentRisk!=="all"));
+    switchTab("list");
+    renderList();
+  }));
   document.querySelectorAll(".tone").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tone").forEach(x=>x.classList.remove("active"));t.classList.add("active");currentTone=t.dataset.tone;}));
 });
