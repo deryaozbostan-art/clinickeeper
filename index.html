@@ -137,7 +137,10 @@
             <legend>Geçmiş randevu davranışı</legend>
             <div class="frow">
               <label class="field"><span>Gelinen randevu</span><input type="number" id="total_success_appointments" min="0" value="0" /></label>
-              <label class="field"><span>İptal</span><input type="number" id="total_cancellations" min="0" value="0" /></label>
+              <label class="field"><span>Geç iptal <small>(son 24 saatte)</small></span><input type="number" id="total_gec_iptal" min="0" value="0" /></label>
+            </div>
+            <div class="frow">
+              <label class="field"><span>Erken iptal <small>(24+ saat önce)</small></span><input type="number" id="total_erken_iptal" min="0" value="0" /></label>
               <label class="field"><span>Ertelenen</span><input type="number" id="total_rescheduled" min="0" value="0" /></label>
             </div>
             <input type="hidden" id="week_of_month" value="2" />
@@ -188,7 +191,7 @@
 </main>
 
 <footer class="foot">
-  Model: Gradient Boosting · CHLA veri seti · Eşik 0.15 · Pilot: Polident Ağız ve Diş Sağlığı. Klinik karar aracı değildir; hatırlatma önceliklendirme amaçlıdır.
+  Model: Gradient Boosting · Klinik kurallara dayalı sentetik veri (40.000 kayıt) · Pilot: Polident Ağız ve Diş Sağlığı. Klinik karar aracı değildir; hatırlatma önceliklendirme amaçlıdır.
 </footer>
 
 <script src="app.js"></script>

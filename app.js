@@ -1,27 +1,34 @@
+/* ClinicKeeper frontend — Polident randevu zekâsı (v2, sentetik model)
+   Backend: FastAPI on Render — /schema, /predict, /generate-message
+   Klinik mantık: geç iptal (24s) ağır, erken iptal 2+ risk, sadakat düşürür */
+
 const API_BASE="https://clinickeeper-api.onrender.com";
 const GAUGE_LEN=Math.PI*80;
 let lastResult=null,currentTone="samimi",currentRole="yonetici",currentBranch="all",currentWhen="hafta",currentRisk="all",scoredPatients=[];
 const STAFF_BRANCH="Kadıköy";
 const MONTHS=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 const APPT_LABELS={"New":"Yeni hasta","Follow-up":"Eski hasta","Others":"Diğer"};
-const BRANCH_TO_CLINIC={"Kadıköy":"SANTA MONICA CLINIC","Ataşehir":"ENCINO CARE CENTER","Bakırköy":"SOUTH BAY CARE CENTER"};
+
+/* Hızlı örnekler (tek hasta) */
 const EXAMPLES={
-  high:{patient_name:"Ayşe Yılmaz",lead_time:58,age:34,appt_num:2,total_success_appointments:0,total_cancellations:0,total_rescheduled:0,is_repeat:true,day_of_week:"3",hour_of_day:9,month:12,week_of_month:1,appt_type:"New",clinic:"VALENCIA CARE CENTER"},
-  low:{patient_name:"Mehmet Demir",lead_time:2,age:41,appt_num:8,total_success_appointments:6,total_cancellations:0,total_rescheduled:0,is_repeat:true,day_of_week:"2",hour_of_day:11,month:6,week_of_month:2,appt_type:"Follow-up",clinic:"SANTA MONICA CLINIC"}
+  high:{patient_name:"Ayşe Yılmaz",lead_time:55,age:34,appt_num:3,total_gec_iptal:2,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:0,is_repeat:true,day_of_week:"3",hour_of_day:9,month:12,week_of_month:1,appt_type:"New",clinic:"Kadıköy"},
+  low:{patient_name:"Mehmet Demir",lead_time:2,age:41,appt_num:9,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:8,is_repeat:true,day_of_week:"2",hour_of_day:11,month:6,week_of_month:2,appt_type:"Follow-up",clinic:"Ataşehir"}
 };
+
+/* Polident randevu listesi — yeni değişkenlerle */
 const PATIENTS=[
- {name:"Zeynep Kaya",islem:"İmplant kontrolü",sube:"Kadıköy",saat:"09:00",when:"yarin",tag:"",f:{lead_time:58,age:29,appt_num:2,total_success_appointments:0,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:3,hour_of_day:9,month:12,week_of_month:1,appt_type:"New",ethnicity:"Hispanic",race:"Other",clinic:"VALENCIA CARE CENTER"}},
- {name:"Emre Şahin",islem:"Dolgu",sube:"Bakırköy",saat:"09:30",when:"yarin",tag:"",f:{lead_time:40,age:27,appt_num:2,total_success_appointments:0,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:2,hour_of_day:9,month:10,week_of_month:1,appt_type:"New",ethnicity:"Hispanic",race:"Other",clinic:"SOUTH BAY CARE CENTER"}},
- {name:"Elif Aydın",islem:"Diş çekimi",sube:"Ataşehir",saat:"10:00",when:"hafta",tag:"1 erteleme",f:{lead_time:45,age:31,appt_num:2,total_success_appointments:0,total_cancellations:0,total_rescheduled:1,is_repeat:1,day_of_week:4,hour_of_day:10,month:11,week_of_month:1,appt_type:"New",ethnicity:"Hispanic",race:"Other",clinic:"VALENCIA CARE CENTER"}},
- {name:"Burak Çelik",islem:"Kanal tedavisi",sube:"Ataşehir",saat:"10:30",when:"hafta",tag:"",f:{lead_time:20,age:30,appt_num:3,total_success_appointments:1,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:1,hour_of_day:10,month:9,week_of_month:2,appt_type:"New",ethnicity:"Hispanic",race:"Other",clinic:"SOUTH BAY CARE CENTER"}},
- {name:"Selin Doğan",islem:"Detartraj",sube:"Kadıköy",saat:"11:00",when:"yarin",tag:"1 iptal",f:{lead_time:24,age:33,appt_num:3,total_success_appointments:0,total_cancellations:1,total_rescheduled:0,is_repeat:1,day_of_week:3,hour_of_day:11,month:8,week_of_month:3,appt_type:"New",ethnicity:"Hispanic",race:"Other",clinic:"SOUTH BAY CARE CENTER"}},
- {name:"Okan Yıldız",islem:"Diş taşı temizliği",sube:"Bakırköy",saat:"11:30",when:"hafta",tag:"",f:{lead_time:17,age:52,appt_num:3,total_success_appointments:1,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:1,hour_of_day:11,month:6,week_of_month:3,appt_type:"New",ethnicity:"Hispanic",race:"Other",clinic:"ENCINO CARE CENTER"}},
- {name:"Caner Öztürk",islem:"Dolgu",sube:"Kadıköy",saat:"13:00",when:"yarin",tag:"",f:{lead_time:12,age:45,appt_num:4,total_success_appointments:3,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:3,hour_of_day:13,month:7,week_of_month:4,appt_type:"Follow-up",ethnicity:"Hispanic",race:"Other",clinic:"ENCINO CARE CENTER"}},
- {name:"Gizem Arslan",islem:"Kontrol",sube:"Ataşehir",saat:"13:30",when:"hafta",tag:"",f:{lead_time:9,age:33,appt_num:5,total_success_appointments:4,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:4,hour_of_day:13,month:6,week_of_month:2,appt_type:"Follow-up",ethnicity:"Hispanic",race:"European",clinic:"SANTA MONICA CLINIC"}},
- {name:"Deniz Koç",islem:"Ortodonti kontrolü",sube:"Bakırköy",saat:"14:00",when:"hafta",tag:"",f:{lead_time:7,age:19,appt_num:6,total_success_appointments:5,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:2,hour_of_day:14,month:5,week_of_month:2,appt_type:"Follow-up",ethnicity:"Hispanic",race:"European",clinic:"SANTA MONICA CLINIC"}},
- {name:"Merve Aksoy",islem:"Dolgu kontrolü",sube:"Kadıköy",saat:"14:30",when:"yarin",tag:"",f:{lead_time:5,age:40,appt_num:7,total_success_appointments:6,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:3,hour_of_day:14,month:5,week_of_month:3,appt_type:"Follow-up",ethnicity:"Hispanic",race:"European",clinic:"SANTA MONICA CLINIC"}},
- {name:"Kaan Erdoğan",islem:"Rutin muayene",sube:"Ataşehir",saat:"15:00",when:"hafta",tag:"",f:{lead_time:3,age:47,appt_num:9,total_success_appointments:8,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:4,hour_of_day:15,month:6,week_of_month:2,appt_type:"Follow-up",ethnicity:"Hispanic",race:"European",clinic:"SANTA MONICA CLINIC"}},
- {name:"Buse Yılmaz",islem:"Beyazlatma kontrolü",sube:"Bakırköy",saat:"15:30",when:"yarin",tag:"",f:{lead_time:2,age:36,appt_num:10,total_success_appointments:9,total_cancellations:0,total_rescheduled:0,is_repeat:1,day_of_week:2,hour_of_day:15,month:6,week_of_month:4,appt_type:"Follow-up",ethnicity:"Hispanic",race:"European",clinic:"SANTA MONICA CLINIC"}}
+ {name:"Zeynep Kaya",islem:"İmplant kontrolü",sube:"Kadıköy",saat:"09:00",when:"yarin",tag:"2 geç iptal",f:{lead_time:55,age:29,appt_num:3,total_gec_iptal:2,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:0,is_repeat:1,day_of_week:3,hour_of_day:9,month:12,week_of_month:1,appt_type:"New",clinic:"Kadıköy"}},
+ {name:"Emre Şahin",islem:"Dolgu",sube:"Bakırköy",saat:"09:30",when:"yarin",tag:"1 geç iptal",f:{lead_time:45,age:27,appt_num:2,total_gec_iptal:1,total_erken_iptal:1,total_rescheduled:0,total_success_appointments:0,is_repeat:1,day_of_week:2,hour_of_day:9,month:10,week_of_month:1,appt_type:"New",clinic:"Bakırköy"}},
+ {name:"Elif Aydın",islem:"Diş çekimi",sube:"Ataşehir",saat:"10:00",when:"hafta",tag:"1 geç + erteleme",f:{lead_time:40,age:31,appt_num:2,total_gec_iptal:1,total_erken_iptal:0,total_rescheduled:2,total_success_appointments:0,is_repeat:1,day_of_week:4,hour_of_day:10,month:11,week_of_month:1,appt_type:"New",clinic:"Ataşehir"}},
+ {name:"Burak Çelik",islem:"Kanal tedavisi",sube:"Ataşehir",saat:"10:30",when:"hafta",tag:"3 erken iptal",f:{lead_time:30,age:30,appt_num:4,total_gec_iptal:0,total_erken_iptal:3,total_rescheduled:0,total_success_appointments:1,is_repeat:1,day_of_week:1,hour_of_day:10,month:9,week_of_month:2,appt_type:"New",clinic:"Ataşehir"}},
+ {name:"Selin Doğan",islem:"Detartraj",sube:"Kadıköy",saat:"11:00",when:"yarin",tag:"yeni hasta",f:{lead_time:60,age:33,appt_num:1,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:0,is_repeat:0,day_of_week:3,hour_of_day:11,month:8,week_of_month:3,appt_type:"New",clinic:"Kadıköy"}},
+ {name:"Okan Yıldız",islem:"Diş taşı temizliği",sube:"Bakırköy",saat:"11:30",when:"hafta",tag:"3 erken iptal",f:{lead_time:30,age:52,appt_num:4,total_gec_iptal:0,total_erken_iptal:3,total_rescheduled:2,total_success_appointments:1,is_repeat:1,day_of_week:1,hour_of_day:11,month:6,week_of_month:3,appt_type:"Follow-up",clinic:"Bakırköy"}},
+ {name:"Caner Öztürk",islem:"Dolgu",sube:"Kadıköy",saat:"13:00",when:"yarin",tag:"",f:{lead_time:18,age:45,appt_num:5,total_gec_iptal:0,total_erken_iptal:1,total_rescheduled:0,total_success_appointments:3,is_repeat:1,day_of_week:3,hour_of_day:13,month:7,week_of_month:4,appt_type:"Follow-up",clinic:"Kadıköy"}},
+ {name:"Gizem Arslan",islem:"Kontrol",sube:"Ataşehir",saat:"13:30",when:"hafta",tag:"",f:{lead_time:12,age:33,appt_num:5,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:1,total_success_appointments:4,is_repeat:1,day_of_week:4,hour_of_day:13,month:6,week_of_month:2,appt_type:"Follow-up",clinic:"Ataşehir"}},
+ {name:"Deniz Koç",islem:"Ortodonti kontrolü",sube:"Bakırköy",saat:"14:00",when:"hafta",tag:"",f:{lead_time:7,age:19,appt_num:6,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:5,is_repeat:1,day_of_week:2,hour_of_day:14,month:5,week_of_month:2,appt_type:"Follow-up",clinic:"Bakırköy"}},
+ {name:"Merve Aksoy",islem:"Dolgu kontrolü",sube:"Kadıköy",saat:"14:30",when:"yarin",tag:"",f:{lead_time:5,age:40,appt_num:7,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:6,is_repeat:1,day_of_week:3,hour_of_day:14,month:5,week_of_month:3,appt_type:"Follow-up",clinic:"Kadıköy"}},
+ {name:"Kaan Erdoğan",islem:"Rutin muayene",sube:"Ataşehir",saat:"15:00",when:"hafta",tag:"",f:{lead_time:3,age:47,appt_num:9,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:8,is_repeat:1,day_of_week:4,hour_of_day:15,month:6,week_of_month:2,appt_type:"Follow-up",clinic:"Ataşehir"}},
+ {name:"Buse Yılmaz",islem:"Beyazlatma kontrolü",sube:"Bakırköy",saat:"15:30",when:"yarin",tag:"",f:{lead_time:2,age:36,appt_num:10,total_gec_iptal:0,total_erken_iptal:0,total_rescheduled:0,total_success_appointments:9,is_repeat:1,day_of_week:2,hour_of_day:15,month:6,week_of_month:4,appt_type:"Follow-up",clinic:"Bakırköy"}}
 ];
 
 function bandStyle(b){if(b==="Yüksek")return{color:"var(--coral)",cls:"high"};if(b==="Orta")return{color:"var(--amber)",cls:"mid"};return{color:"var(--green)",cls:"low"};}
@@ -29,9 +36,9 @@ function bandStyle(b){if(b==="Yüksek")return{color:"var(--coral)",cls:"high"};i
 async function loadSchema(){
   let opts;
   try{opts=(await(await fetch(API_BASE+"/schema")).json()).options;}
-  catch{opts={appt_type:["New","Follow-up","Others"]};}
+  catch{opts={clinic:["Kadıköy","Ataşehir","Bakırköy"],appt_type:["New","Follow-up","Others"]};}
   const cs=document.getElementById("clinic");cs.innerHTML="";
-  Object.keys(BRANCH_TO_CLINIC).forEach(s=>{const o=document.createElement("option");o.value=BRANCH_TO_CLINIC[s];o.textContent="Polident "+s;cs.appendChild(o);});
+  (opts.clinic||["Kadıköy","Ataşehir","Bakırköy"]).forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent="Polident "+s;cs.appendChild(o);});
   const as=document.getElementById("appt_type");as.innerHTML="";
   (opts.appt_type||["New","Follow-up","Others"]).forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=APPT_LABELS[v]||v;as.appendChild(o);});
   const ms=document.getElementById("month");ms.innerHTML="";MONTHS.forEach((m,i)=>{const o=document.createElement("option");o.value=i+1;o.textContent=m;ms.appendChild(o);});ms.value=6;
@@ -50,12 +57,9 @@ async function loadList(){
   }catch{document.getElementById("appt-list").innerHTML='<div class="appt-error">Randevular yüklenemedi. Sayfayı birazdan yenileyin.</div>';}
 }
 function updateStats(){
-  const total=scoredPatients.length;
-  const high=scoredPatients.filter(p=>p.band==="Yüksek").length;
-  const low=scoredPatients.filter(p=>p.band==="Düşük").length;
-  document.getElementById("s-total").textContent=total;
-  document.getElementById("s-high").textContent=String(high).padStart(2,"0");
-  document.getElementById("s-low").textContent=String(low).padStart(2,"0");
+  document.getElementById("s-total").textContent=scoredPatients.length;
+  document.getElementById("s-high").textContent=String(scoredPatients.filter(p=>p.band==="Yüksek").length).padStart(2,"0");
+  document.getElementById("s-low").textContent=String(scoredPatients.filter(p=>p.band==="Düşük").length).padStart(2,"0");
 }
 function visible(){
   let r=scoredPatients.slice();
@@ -97,7 +101,8 @@ function openInAnalyzer(name){
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
   document.getElementById("patient_name").value=p.name;
   set("lead_time",p.f.lead_time);set("age",p.f.age);set("appt_num",p.f.appt_num);
-  set("total_success_appointments",p.f.total_success_appointments);set("total_cancellations",p.f.total_cancellations);set("total_rescheduled",p.f.total_rescheduled);
+  set("total_gec_iptal",p.f.total_gec_iptal);set("total_erken_iptal",p.f.total_erken_iptal);
+  set("total_rescheduled",p.f.total_rescheduled);set("total_success_appointments",p.f.total_success_appointments);
   document.getElementById("is_repeat").checked=!!p.f.is_repeat;
   set("day_of_week",String(p.f.day_of_week));set("hour_select",p.f.hour_of_day);set("month",p.f.month);set("week_of_month",p.f.week_of_month);
   set("appt_type",p.f.appt_type);set("clinic",p.f.clinic);
@@ -110,7 +115,7 @@ function switchTab(w){
 }
 function collect(){
   const v=id=>document.getElementById(id).value,n=id=>Number(v(id));
-  return{lead_time:n("lead_time"),age:n("age"),appt_num:n("appt_num"),total_cancellations:n("total_cancellations"),total_rescheduled:n("total_rescheduled"),total_success_appointments:n("total_success_appointments"),is_repeat:document.getElementById("is_repeat").checked?1:0,day_of_week:n("day_of_week"),week_of_month:n("week_of_month"),month:n("month"),hour_of_day:n("hour_select"),appt_type:v("appt_type"),ethnicity:"Hispanic",race:"Other",clinic:v("clinic")};
+  return{lead_time:n("lead_time"),age:n("age"),appt_num:n("appt_num"),total_gec_iptal:n("total_gec_iptal"),total_erken_iptal:n("total_erken_iptal"),total_rescheduled:n("total_rescheduled"),total_success_appointments:n("total_success_appointments"),is_repeat:document.getElementById("is_repeat").checked?1:0,day_of_week:n("day_of_week"),week_of_month:n("week_of_month"),month:n("month"),hour_of_day:n("hour_select"),appt_type:v("appt_type"),clinic:v("clinic")};
 }
 function applyExample(k){const ex=EXAMPLES[k];for(const[key,val]of Object.entries(ex)){const el=document.getElementById(key==="hour_of_day"?"hour_select":key);if(!el)continue;if(el.type==="checkbox")el.checked=Boolean(val);else el.value=val;}}
 function verdictText(b,p,f){if(b==="Yüksek")return `Bu hasta <b>yüksek no-show riski</b> taşıyor (%${p}). Hafta başında gözden geçirilmeli — aşağıdan hatırlatma mesajı oluşturabilirsin.`;if(b==="Orta")return `<b>Orta düzey risk</b> (%${p}). Nazik bir hatırlatma faydalı olur.`;return f?`Düşük ama eşik üstü risk (%${p}).`:`<b>Düşük risk</b> (%${p}). Ek hatırlatmaya gerek görünmüyor.`;}
@@ -142,12 +147,6 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll("[data-role]").forEach(b=>b.addEventListener("click",()=>{currentRole=b.dataset.role;document.querySelectorAll("[data-role]").forEach(x=>x.classList.toggle("active",x.dataset.role===currentRole));updateControls();}));
   const bs=document.getElementById("branch-select");if(bs)bs.addEventListener("change",()=>{currentBranch=bs.value;renderList();});
   document.querySelectorAll("[data-when]").forEach(b=>b.addEventListener("click",()=>{currentWhen=b.dataset.when;document.querySelectorAll("[data-when]").forEach(x=>x.classList.toggle("active",x.dataset.when===currentWhen));renderList();}));
-  document.querySelectorAll("[data-example]").forEach(b=>b.addEventListener("click",()=>applyExample(b.dataset.example)));
-  document.querySelectorAll(".stat-card.clickable").forEach(c=>c.addEventListener("click",()=>{
-    currentRisk=c.dataset.risk;
-    document.querySelectorAll(".stat-card.clickable").forEach(x=>x.classList.toggle("active",x===c && currentRisk!=="all"));
-    switchTab("list");
-    renderList();
-  }));
+  document.querySelectorAll(".stat-card.clickable").forEach(c=>c.addEventListener("click",()=>{currentRisk=c.dataset.risk;document.querySelectorAll(".stat-card.clickable").forEach(x=>x.classList.toggle("active",x===c && currentRisk!=="all"));switchTab("list");renderList();}));
   document.querySelectorAll(".tone").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tone").forEach(x=>x.classList.remove("active"));t.classList.add("active");currentTone=t.dataset.tone;}));
 });
