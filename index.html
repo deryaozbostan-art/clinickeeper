@@ -11,6 +11,39 @@
 </head>
 <body>
 
+<!-- ============ GİRİŞ / KAYIT EKRANI ============ -->
+<div id="auth-screen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand">ClinicKeeper</div>
+    <p class="auth-sub">Randevu no-show risk paneline erişmek için giriş yap.</p>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-authtab="login">Giriş Yap</button>
+      <button type="button" class="auth-tab" data-authtab="register">Kayıt Ol</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <label class="field"><span>E-posta</span><input type="email" id="login-email" required autocomplete="email" /></label>
+      <label class="field"><span>Şifre</span><input type="password" id="login-password" required autocomplete="current-password" /></label>
+      <p class="auth-error" id="login-error" hidden></p>
+      <button type="submit" class="btn-primary" id="login-btn"><span class="btn-label">Giriş Yap</span><span class="btn-spinner" hidden></span></button>
+    </form>
+
+    <form id="register-form" class="auth-form" hidden>
+      <label class="field"><span>Klinik Adı</span><input type="text" id="register-klinik" required placeholder="ör. Polident Ağız ve Diş Sağlığı" /></label>
+      <label class="field"><span>Şube <small>(opsiyonel)</small></span><input type="text" id="register-sube" placeholder="ör. Kadıköy" /></label>
+      <label class="field"><span>E-posta</span><input type="email" id="register-email" required autocomplete="email" /></label>
+      <label class="field"><span>Şifre <small>(en az 6 karakter)</small></span><input type="password" id="register-password" required minlength="6" autocomplete="new-password" /></label>
+      <p class="auth-error" id="register-error" hidden></p>
+      <p class="auth-success" id="register-success" hidden></p>
+      <button type="submit" class="btn-primary" id="register-btn"><span class="btn-label">Kayıt Ol</span><span class="btn-spinner" hidden></span></button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ MEVCUT PANEL (giriş yapılana kadar gizli) ============ -->
+<div id="app-content" hidden>
+
 <div class="trust-band">
   <div class="trust-inner">
     <span class="trust-brand">ClinicKeeper</span>
@@ -19,6 +52,10 @@
       <span><b>%53</b> yakalama</span><span class="stat-sep"></span>
       <span><b>17.172</b> gerçek randevu</span><span class="stat-sep"></span>
       <span class="stat-live"><i></i> model canlı</span>
+    </div>
+    <div class="auth-user-box">
+      <span id="user-email-label"></span>
+      <button id="logout-btn" class="logout-btn" type="button">Çıkış yap</button>
     </div>
   </div>
 </div>
@@ -194,6 +231,10 @@
   Model: Gradient Boosting · Klinik kurallara dayalı sentetik veri (40.000 kayıt) · Pilot: Polident Ağız ve Diş Sağlığı. Klinik karar aracı değildir; hatırlatma önceliklendirme amaçlıdır.
 </footer>
 
+</div><!-- /#app-content -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
