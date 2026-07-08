@@ -1,5 +1,5 @@
 /* ClinicKeeper frontend — Polident randevu zekâsı (v2, sentetik model)
-   Backend: FastAPI on Render — /schema, /predict, /generate-message
+   Backend: FastAPI on Render — /schema, /predict, /generate-message, /analyze-emotion
    Klinik mantık: geç iptal (24s) ağır, erken iptal 2+ risk, sadakat düşürür */
 
 const API_BASE="https://clinickeeper-api.onrender.com";
@@ -126,7 +126,7 @@ async function predict(e){
   catch(err){alert("Tahmin alınamadı. Birkaç saniye sonra tekrar dene.");console.error(err);}
   finally{setLoading(btn,false);}
 }
-function show(d){document.getElementById("result-empty").hidden=true;document.getElementById("result-content").hidden=false;updateGauge(d.noshow_percent,d.risk_band);const v=document.getElementById("verdict");v.className="verdict "+bandStyle(d.risk_band).cls;v.innerHTML=verdictText(d.risk_band,d.noshow_percent,d.will_flag);document.getElementById("ai-message").hidden=true;}
+function show(d){document.getElementById("result-empty").hidden=true;document.getElementById("result-content").hidden=false;updateGauge(d.noshow_percent,d.risk_band);const v=document.getElementById("verdict");v.className="verdict "+bandStyle(d.risk_band).cls;v.innerHTML=verdictText(d.risk_band,d.noshow_percent,d.will_flag);document.getElementById("ai-message").hidden=true;resetConv();}
 async function genMsg(){
   if(!lastResult)return;const btn=document.getElementById("msg-btn");setLoading(btn,true);
   const body={patient_name:lastResult.patient_name,risk_band:lastResult.risk_band,noshow_percent:lastResult.noshow_percent,clinic:"Polident Ağız ve Diş Sağlığı Kliniği",appt_type:APPT_LABELS[lastResult.appt_type]||lastResult.appt_type,lead_time:lastResult.lead_time,tone:currentTone};
@@ -138,11 +138,51 @@ function setLoading(b,l){b.disabled=l;b.querySelector(".btn-label").style.opacit
 function copyMsg(){const t=document.getElementById("ai-message-text").textContent;navigator.clipboard.writeText(t).then(()=>{const b=document.getElementById("copy-btn");const o=b.textContent;b.textContent="Kopyalandı ✓";setTimeout(()=>b.textContent=o,1500);});}
 function updateControls(){const bw=document.getElementById("branch-wrap"),sl=document.getElementById("staff-branch-label");if(currentRole==="personel"){bw.hidden=true;sl.hidden=false;sl.textContent="Polident "+STAFF_BRANCH;}else{bw.hidden=false;sl.hidden=true;}renderList();}
 
+/* ---------- Görüşme Analizi (opsiyonel) ---------- */
+function convTonStyle(pct){
+  if(pct>=60)return{color:"var(--coral)",cls:"high"};
+  if(pct>=35)return{color:"var(--amber)",cls:"mid"};
+  return{color:"var(--green)",cls:"low"};
+}
+function resetConv(){
+  const r=document.getElementById("conv-result");if(r)r.hidden=true;
+  const t=document.getElementById("conv-text");if(t)t.value="";
+}
+async function analyzeConv(){
+  const txt=document.getElementById("conv-text").value.trim();
+  if(!txt){document.getElementById("conv-text").focus();return;}
+  const btn=document.getElementById("conv-btn");setLoading(btn,true);
+  try{
+    const r=await fetch(API_BASE+"/analyze-emotion",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:txt})});
+    if(!r.ok)throw new Error(await r.text());
+    const d=await r.json();
+    const pct=Math.round(Number(d.tereddut_yuzde)||0);
+    const {color,cls}=convTonStyle(pct);
+    document.getElementById("conv-ton").textContent=d.ton||"Belirsiz";
+    document.getElementById("conv-ton").className="conv-ton "+cls;
+    document.getElementById("conv-pct").textContent="Tereddüt: %"+pct;
+    document.getElementById("conv-pct").style.color=color;
+    const bar=document.getElementById("conv-bar-fill");bar.style.width=Math.min(pct,100)+"%";bar.style.background=color;
+    document.getElementById("conv-yorum").textContent=d.yorum||"";
+    document.getElementById("conv-result").hidden=false;
+  }catch(err){
+    document.getElementById("conv-ton").textContent="Hata";
+    document.getElementById("conv-ton").className="conv-ton";
+    document.getElementById("conv-pct").textContent="";
+    document.getElementById("conv-bar-fill").style.width="0%";
+    document.getElementById("conv-yorum").textContent="Analiz yapılamadı. Birkaç saniye sonra tekrar dene.";
+    document.getElementById("conv-result").hidden=false;
+    console.error(err);
+  }finally{setLoading(btn,false);}
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
   loadSchema().then(loadList);
   document.getElementById("patient-form").addEventListener("submit",predict);
   document.getElementById("msg-btn").addEventListener("click",genMsg);
   document.getElementById("copy-btn").addEventListener("click",copyMsg);
+  const convBtn=document.getElementById("conv-btn");if(convBtn)convBtn.addEventListener("click",analyzeConv);
+  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>applyExample(c.dataset.example)));
   document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchTab(t.dataset.tab)));
   document.querySelectorAll("[data-role]").forEach(b=>b.addEventListener("click",()=>{currentRole=b.dataset.role;document.querySelectorAll("[data-role]").forEach(x=>x.classList.toggle("active",x.dataset.role===currentRole));updateControls();}));
   const bs=document.getElementById("branch-select");if(bs)bs.addEventListener("change",()=>{currentBranch=bs.value;renderList();});
