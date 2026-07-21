@@ -227,6 +227,10 @@
               <h3>Görüşme Analizi <span class="conv-opt">isteğe bağlı</span></h3>
             </div>
             <p class="conv-desc">Hastayla yapılan görüşmenin notunu veya hastanın yazılı cevabını yapıştır; sistem konuşmanın tonunu ayrı bir sinyal olarak değerlendirsin. Model riskini değiştirmez.</p>
+            <div class="conv-voice-row">
+              <button type="button" class="btn-secondary conv-voice-btn" id="vapi-btn"><span class="btn-label">🎙️ AI ile Sesli Görüş</span></button>
+              <span class="conv-voice-status" id="vapi-status"></span>
+            </div>
             <textarea id="conv-text" class="conv-textarea" rows="3" placeholder="ör. Hastayı aradım, 'o gün müsait miyim bilmiyorum, bakarım' dedi, sesi isteksizdi."></textarea>
             <button class="btn-secondary" id="conv-btn"><span class="btn-label">Görüşme tonunu analiz et</span><span class="btn-spinner" hidden></span></button>
             <div class="conv-result" id="conv-result" hidden>
@@ -250,7 +254,7 @@
 </footer>
 
 </div><!-- /#app-content -->
-
+  <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
 <script src="app.js"></script>
