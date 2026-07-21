@@ -200,12 +200,12 @@ let vapiTranscript = "";
 
 function initVapi() {
   if (vapiInstance) return vapiInstance;
-  if (typeof Vapi === "undefined") {
+  const VapiSDK = window.Vapi || window.vapiSDK || (typeof Vapi !== "undefined" ? Vapi : null);
+  if (!VapiSDK) {
     console.error("Vapi SDK yüklenemedi.");
     return null;
   }
-  vapiInstance = new Vapi(VAPI_PUBLIC_KEY);
-
+  vapiInstance = new VapiSDK(VAPI_PUBLIC_KEY);
   vapiInstance.on("call-start", () => {
     vapiActive = true;
     vapiTranscript = "";
