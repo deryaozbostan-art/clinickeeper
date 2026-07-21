@@ -190,55 +190,30 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll(".stat-card.clickable").forEach(c=>c.addEventListener("click",()=>{currentRisk=c.dataset.risk;document.querySelectorAll(".stat-card.clickable").forEach(x=>x.classList.toggle("active",x===c && currentRisk!=="all"));switchTab("list");renderList();}));
   document.querySelectorAll(".tone").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tone").forEach(x=>x.classList.remove("active"));t.classList.add("active");currentTone=t.dataset.tone;}));
 });
-/* ---------- Vapi Sesli Görüşme (AI ile web call) ---------- */
-const VAPI_PUBLIC_KEY = "e36c1a39-3216-44f3-80ee-568fbe842714";      // Vapi API Keys sayfasından Public Key
-const VAPI_ASSISTANT_ID = "e3e112f3-150a-4d93-97f3-a6e7a636f612";  // Riley'in Assistant ID'si
+/* ---------- Vapi Sesli Görüşme (resmi HTML snippet yöntemi) ---------- */
+const VAPI_PUBLIC_KEY = "e36c1a39-3216-44f3-80ee-568fbe842714";
+const VAPI_ASSISTANT_ID = "e3e112f3-150a-4d93-97f3-a6e7a636f612";
 
 let vapiInstance = null;
 let vapiActive = false;
 let vapiTranscript = "";
+let vapiSDKLoaded = false;
 
-function initVapi() {
-  if (vapiInstance) return vapiInstance;
-  const VapiSDK = window.Vapi || window.vapiSDK || (typeof Vapi !== "undefined" ? Vapi : null);
-  if (!VapiSDK) {
-    console.error("Vapi SDK yüklenemedi.");
-    return null;
-  }
-  vapiInstance = new VapiSDK(VAPI_PUBLIC_KEY);
-  vapiInstance.on("call-start", () => {
-    vapiActive = true;
-    vapiTranscript = "";
-    setVapiStatus("Görüşme başladı — konuşabilirsiniz…", "live");
-    updateVapiBtn();
+/* Vapi SDK'sını dinamik yükle */
+function loadVapiSDK() {
+  return new Promise((resolve, reject) => {
+    if (vapiSDKLoaded && window.vapiSDK) return resolve(window.vapiSDK);
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+    s.defer = true;
+    s.async = true;
+    s.onload = () => {
+      vapiSDKLoaded = true;
+      resolve(window.vapiSDK);
+    };
+    s.onerror = () => reject(new Error("Vapi SDK yüklenemedi"));
+    document.body.appendChild(s);
   });
-
-  vapiInstance.on("call-end", () => {
-    vapiActive = false;
-    setVapiStatus("Görüşme bitti. Metin analiz kutusuna aktarıldı.", "done");
-    updateVapiBtn();
-    // Konuşma metnini duygu analizi kutusuna aktar
-    if (vapiTranscript.trim()) {
-      const ta = document.getElementById("conv-text");
-      if (ta) ta.value = vapiTranscript.trim();
-    }
-  });
-
-  vapiInstance.on("message", (msg) => {
-    // Sadece hastanın (user) konuşmalarını topla
-    if (msg.type === "transcript" && msg.transcriptType === "final" && msg.role === "user") {
-      vapiTranscript += msg.transcript + " ";
-    }
-  });
-
-  vapiInstance.on("error", (e) => {
-    console.error("Vapi hata:", e);
-    vapiActive = false;
-    setVapiStatus("Görüşme sırasında hata oluştu.", "err");
-    updateVapiBtn();
-  });
-
-  return vapiInstance;
 }
 
 function setVapiStatus(text, cls) {
@@ -254,17 +229,56 @@ function updateVapiBtn() {
   btn.querySelector(".btn-label").textContent = vapiActive ? "⏹️ Görüşmeyi Bitir" : "🎙️ AI ile Sesli Görüş";
 }
 
-function toggleVapi() {
-  const v = initVapi();
-  if (!v) {
-    setVapiStatus("Sesli görüşme başlatılamadı.", "err");
+async function toggleVapi() {
+  if (vapiActive && vapiInstance) {
+    try { vapiInstance.stop(); } catch (e) { console.error(e); }
     return;
   }
-  if (vapiActive) {
-    v.stop();
-  } else {
-    setVapiStatus("Bağlanıyor…", "");
-    v.start(VAPI_ASSISTANT_ID);
+
+  setVapiStatus("Bağlanıyor…", "");
+  try {
+    const sdk = await loadVapiSDK();
+    if (!sdk) throw new Error("SDK bulunamadı");
+
+    vapiInstance = sdk.run({
+      apiKey: VAPI_PUBLIC_KEY,
+      assistant: VAPI_ASSISTANT_ID,
+      config: {}
+    });
+
+    vapiInstance.on("call-start", () => {
+      vapiActive = true;
+      vapiTranscript = "";
+      setVapiStatus("Görüşme başladı — konuşabilirsiniz…", "live");
+      updateVapiBtn();
+    });
+
+    vapiInstance.on("call-end", () => {
+      vapiActive = false;
+      setVapiStatus("Görüşme bitti. Metin analiz kutusuna aktarıldı.", "done");
+      updateVapiBtn();
+      if (vapiTranscript.trim()) {
+        const ta = document.getElementById("conv-text");
+        if (ta) ta.value = vapiTranscript.trim();
+      }
+    });
+
+    vapiInstance.on("message", (msg) => {
+      if (msg.type === "transcript" && msg.transcriptType === "final" && msg.role === "user") {
+        vapiTranscript += msg.transcript + " ";
+      }
+    });
+
+    vapiInstance.on("error", (e) => {
+      console.error("Vapi hata:", e);
+      vapiActive = false;
+      setVapiStatus("Görüşme sırasında hata oluştu.", "err");
+      updateVapiBtn();
+    });
+
+  } catch (err) {
+    console.error(err);
+    setVapiStatus("Sesli görüşme başlatılamadı.", "err");
   }
 }
 
