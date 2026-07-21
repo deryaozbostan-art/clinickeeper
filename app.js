@@ -191,8 +191,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll(".tone").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tone").forEach(x=>x.classList.remove("active"));t.classList.add("active");currentTone=t.dataset.tone;}));
 });
 /* ---------- Vapi Sesli Görüşme (esm.sh — tarayıcı uyumlu) ---------- */
-const VAPI_PUBLIC_KEY = "BURAYA_PUBLIC_KEY";
-const VAPI_ASSISTANT_ID = "BURAYA_ASSISTANT_ID";
+const VAPI_PUBLIC_KEY = "e36c1a39-3216-44f3-80ee-568fbe842714";
+const VAPI_ASSISTANT_ID = "e3e112f3-150a-4d93-97f3-a6e7a636f612";
 
 let vapiInstance = null;
 let vapiActive = false;
