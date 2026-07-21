@@ -210,3 +210,10 @@ legend{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--
 .conv-bar{width:100%;height:6px;background:var(--mint);border-radius:99px;overflow:hidden;margin-bottom:10px}
 .conv-bar i{display:block;height:100%;border-radius:99px;background:var(--teal);width:0%;transition:width .6s cubic-bezier(.16,1,.3,1)}
 .conv-yorum{font-size:13.5px;color:var(--ink);line-height:1.6}
+/* ===== Vapi sesli görüşme butonu ===== */
+.conv-voice-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.conv-voice-btn{width:auto;padding:9px 16px}
+.conv-voice-status{font-size:12.5px;color:var(--ink-soft)}
+.conv-voice-status.live{color:var(--teal-deep);font-weight:600}
+.conv-voice-status.done{color:var(--green);font-weight:600}
+.conv-voice-status.err{color:var(--coral);font-weight:600}
