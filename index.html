@@ -78,6 +78,7 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="list">Randevu Listesi</button>
     <button class="tab" data-tab="single">Tek Hasta Analizi</button>
+    <button class="tab" data-tab="randevu">Gelen Randevular</button>
   </div>
 </div>
 
@@ -244,6 +245,20 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- SEKME 3 -->
+  <section class="panel-tab" id="panel-randevu">
+    <div class="list-head">
+      <div>
+        <h2>Gelen Randevu Talepleri</h2>
+        <p class="list-sub">AI ile sesli görüşmeden gelen randevu talepleri</p>
+      </div>
+      <button class="row-btn" id="randevu-refresh">Yenile</button>
+    </div>
+    <div class="appt-list" id="randevu-list">
+      <div class="appt-loading"><span class="spin"></span><p>Yükleniyor…</p></div>
     </div>
   </section>
 
