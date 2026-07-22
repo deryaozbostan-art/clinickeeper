@@ -112,6 +112,8 @@ function switchTab(w){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===w));
   document.getElementById("panel-list").classList.toggle("active",w==="list");
   document.getElementById("panel-single").classList.toggle("active",w==="single");
+  const pr=document.getElementById("panel-randevu");
+  if(pr){pr.classList.toggle("active",w==="randevu");if(w==="randevu")loadRandevular();}
 }
 function collect(){
   const v=id=>document.getElementById(id).value,n=id=>Number(v(id));
@@ -257,4 +259,31 @@ async function toggleVapi() {
 document.addEventListener("DOMContentLoaded", () => {
   const vb = document.getElementById("vapi-btn");
   if (vb) vb.addEventListener("click", toggleVapi);
+});
+/* ---------- Gelen Randevu Talepleri ---------- */
+async function loadRandevular(){
+  const wrap=document.getElementById("randevu-list");
+  if(!wrap)return;
+  wrap.innerHTML='<div class="appt-loading"><span class="spin"></span><p>Yükleniyor…</p></div>';
+  try{
+    const {data,error}=await sb.from("randevu_talepleri").select("*").order("created_at",{ascending:false});
+    if(error)throw error;
+    if(!data||!data.length){wrap.innerHTML='<div class="appt-error">Henüz randevu talebi yok.</div>';return;}
+    const head='<div class="arow head no-sube"><span>Hasta</span><span>Telefon</span><span>İstenen</span><span>Kaynak</span><span>Durum</span></div>';
+    const body=data.map(r=>`<div class="arow no-sube">
+      <span class="name"><b>${r.hasta_adi||"—"}</b></span>
+      <span class="islem">${r.telefon||"—"}</span>
+      <span class="islem">${(r.istenen_tarih||"")+" "+(r.istenen_saat||"")}</span>
+      <span class="sube">${r.kaynak||"—"}</span>
+      <span class="saat">${r.durum||"yeni"}</span>
+    </div>`).join("");
+    wrap.innerHTML=head+body;
+  }catch(e){
+    console.error(e);
+    wrap.innerHTML='<div class="appt-error">Randevular yüklenemedi.</div>';
+  }
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  const rb=document.getElementById("randevu-refresh");
+  if(rb)rb.addEventListener("click",loadRandevular);
 });
