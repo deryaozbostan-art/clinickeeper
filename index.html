@@ -78,6 +78,7 @@
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="list">Randevu Listesi</button>
     <button class="tab" data-tab="single">Tek Hasta Analizi</button>
+    <button class="tab" data-tab="gorusme">AI Görüşme</button>
     <button class="tab" data-tab="randevu">Gelen Randevular</button>
   </div>
 </div>
@@ -221,28 +222,34 @@
               <button class="copy-btn" id="copy-btn">Kopyala</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-          <!-- Görüşme Analizi (opsiyonel karar-destek katmanı) -->
-          <div class="conv-block">
-            <div class="conv-head">
-              <h3>Görüşme Analizi <span class="conv-opt">isteğe bağlı</span></h3>
-            </div>
-            <p class="conv-desc">Hastayla yapılan görüşmenin notunu veya hastanın yazılı cevabını yapıştır; sistem konuşmanın tonunu ayrı bir sinyal olarak değerlendirsin. Model riskini değiştirmez.</p>
-            <div class="conv-voice-row">
-              <button type="button" class="btn-secondary conv-voice-btn" id="vapi-btn"><span class="btn-label">🎙️ AI ile Sesli Görüş</span></button>
-              <span class="conv-voice-status" id="vapi-status"></span>
-            </div>
-            <textarea id="conv-text" class="conv-textarea" rows="3" placeholder="ör. Hastayı aradım, 'o gün müsait miyim bilmiyorum, bakarım' dedi, sesi isteksizdi."></textarea>
-            <button class="btn-secondary" id="conv-btn"><span class="btn-label">Görüşme tonunu analiz et</span><span class="btn-spinner" hidden></span></button>
-            <div class="conv-result" id="conv-result" hidden>
-              <div class="conv-score-row">
-                <span class="conv-ton" id="conv-ton">—</span>
-                <span class="conv-pct" id="conv-pct">—</span>
-              </div>
-              <div class="conv-bar"><i id="conv-bar-fill"></i></div>
-              <p class="conv-yorum" id="conv-yorum"></p>
-            </div>
+  <!-- SEKME: AI GÖRÜŞME -->
+  <section class="panel-tab" id="panel-gorusme">
+    <div class="gorusme-wrap">
+      <div class="gorusme-card">
+        <div class="gorusme-icon">🎙️</div>
+        <h2>AI ile Sesli Görüşme</h2>
+        <p class="gorusme-desc">Yapay zekâ asistanı hastayla sesli görüşür, randevu talebini alır ve konuşmanın duygu tonunu analiz eder. Görüşme bittiğinde hem randevu talebi kaydedilir hem de hastanın tutumu aşağıda gösterilir.</p>
+        <button type="button" class="btn-primary gorusme-btn" id="vapi-btn"><span class="btn-label">🎙️ Sesli Görüşmeyi Başlat</span></button>
+        <span class="conv-voice-status" id="vapi-status"></span>
+
+        <div class="conv-result" id="conv-result" hidden>
+          <h3 class="conv-result-title">Görüşme Tonu Analizi</h3>
+          <div class="conv-score-row">
+            <span class="conv-ton" id="conv-ton">—</span>
+            <span class="conv-pct" id="conv-pct">—</span>
           </div>
+          <div class="conv-bar"><i id="conv-bar-fill"></i></div>
+          <p class="conv-yorum" id="conv-yorum"></p>
+        </div>
+
+        <div class="gorusme-transcript" id="gorusme-transcript" hidden>
+          <h3 class="conv-result-title">Konuşma Metni</h3>
+          <p id="conv-text-display"></p>
         </div>
       </div>
     </div>
